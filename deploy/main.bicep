@@ -64,7 +64,7 @@ module ai 'ai.bicep' = {
     openaiDeploymentName: 'openai-${projectName}'
     documentIntDeploymentName: 'documentInt-${projectName}'
     projectName: projectName
-    storagePrincipalID: indexer_storage.outputs.storagePrincipalID
+    indexerStorageAccountName: indexer_storage.outputs.storageAccountName
   }
 }
 
