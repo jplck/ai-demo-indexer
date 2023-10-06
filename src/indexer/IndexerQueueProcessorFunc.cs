@@ -20,26 +20,19 @@ namespace Company.Function
         private readonly ILogger<IndexerQueueProcessorFunc> _logger;
         private readonly IConfiguration _configuration;
 
-        private DocumentAnalysisClient _diClient;
-
         private IEmbeddingsGenerator _embeddingsGenerator;
 
-        public IndexerQueueProcessorFunc(ILogger<IndexerQueueProcessorFunc> logger, IConfiguration configuration, IEmbeddingsGenerator embeddingsGenerator)
+        private IChunker _chunker;
+
+        private IDocumentRecognizer _documentRecognizer;
+
+        public IndexerQueueProcessorFunc(ILogger<IndexerQueueProcessorFunc> logger, IConfiguration configuration, IEmbeddingsGenerator embeddingsGenerator, IChunker chunker, IDocumentRecognizer documentRecognizer)
         {
             _logger = logger;
             _configuration = configuration;
-            var diEndpoint = _configuration["DI_ENDPOINT"];
-
-            if (string.IsNullOrEmpty(diEndpoint)) {
-                throw new ArgumentNullException("Document Analysis endpoint must be provided.");
-            }
-
-            _diClient = new DocumentAnalysisClient(
-                new Uri(diEndpoint),
-                new DefaultAzureCredential()
-            );
-
             _embeddingsGenerator = embeddingsGenerator;
+            _chunker = chunker;
+            _documentRecognizer = documentRecognizer;
         }
 
         [Function(nameof(IndexerQueueProcessorFunc))]
@@ -49,12 +42,14 @@ namespace Company.Function
 
             if (blobEvent is not null && blobEvent.Type == "Microsoft.Storage.BlobCreated")
             {
-                var blobUri = new Uri(blobEvent.Data.Url);
-                var blobClient = new BlobClient(blobUri, new DefaultAzureCredential());
+                var documentContent = await _documentRecognizer.RecognizeAsync(blobEvent.Data.Url);
+
+                if (string.IsNullOrEmpty(documentContent)) {
+                    _logger.LogDebug("documentContent is null or empty.");
+                    return;
+                }
                 
-                AnalyzeDocumentOperation operation = await _diClient.AnalyzeDocumentFromUriAsync(WaitUntil.Completed, "prebuilt-layout", blobClient.Uri);
-                AnalyzeResult result = operation.Value;
-                var chunks = Chunk(result.Content.ToString());
+                var chunks = _chunker.Chunk(documentContent);
 
                 if (chunks is null) {
                     _logger.LogDebug("chunks is null.");
@@ -64,11 +59,6 @@ namespace Company.Function
                 var embeddings = await _embeddingsGenerator.GenerateEmbeddingsAsync(chunks);
                 _logger.LogDebug("embeddings generated.");
             }
-        }
-
-        private List<string>? Chunk(string content) {
-            var lines = TextChunker.SplitPlainTextLines(content, 40);
-            return lines;
         }
     }
 }
