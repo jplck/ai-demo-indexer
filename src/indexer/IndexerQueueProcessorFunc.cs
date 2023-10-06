@@ -26,13 +26,21 @@ namespace Company.Function
 
         private IDocumentRecognizer _documentRecognizer;
 
-        public IndexerQueueProcessorFunc(ILogger<IndexerQueueProcessorFunc> logger, IConfiguration configuration, IEmbeddingsGenerator embeddingsGenerator, IChunker chunker, IDocumentRecognizer documentRecognizer)
+        private ISearch _search;
+
+        public IndexerQueueProcessorFunc(ILogger<IndexerQueueProcessorFunc> logger, 
+        IConfiguration configuration, 
+        IEmbeddingsGenerator embeddingsGenerator, 
+        IChunker chunker, 
+        IDocumentRecognizer documentRecognizer,
+        ISearch search)
         {
             _logger = logger;
             _configuration = configuration;
             _embeddingsGenerator = embeddingsGenerator;
             _chunker = chunker;
             _documentRecognizer = documentRecognizer;
+            _search = search;
         }
 
         [Function(nameof(IndexerQueueProcessorFunc))]

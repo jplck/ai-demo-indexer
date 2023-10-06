@@ -8,6 +8,7 @@ var host = new HostBuilder()
         services.AddSingleton<IEmbeddingsGenerator, AzureOpenAIEmbeddingsGenerator>();
         services.AddSingleton<IChunker, SimpleChunker>();
         services.AddSingleton<IDocumentRecognizer, DocumentIntelligence>();
+        services.AddSingleton<ISearch, AzureSearch>();
     })
     .Build();
 
