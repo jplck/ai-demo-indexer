@@ -19,7 +19,7 @@ resource openAIAccount 'Microsoft.CognitiveServices/accounts@2022-03-01' = {
     name: openAISku
   }
   properties: {
-    customSubDomainName: ''
+    customSubDomainName: 'coreai-${projectName}'
     publicNetworkAccess: 'Enabled'
   }
 }
