@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.Identity;
@@ -34,9 +35,10 @@ namespace Company.Function {
 
             foreach (EmbeddingItem embeddingItem in results.Value.Data)
             {
+                var coll = new Collection<float>(embeddingItem.Embedding.ToList()); //TODO: Find a better way to do this
                 var enrichedChunk = new EnrichedChunk(
                     chunks[embeddingItem.Index],
-                    new GenericEmbeddingItem() { Embedding = embeddingItem.Embedding, Index = embeddingItem.Index }
+                    new GenericEmbeddingItem() { Embedding = coll, Index = embeddingItem.Index }
                 );
                 
                 enrichedChunks.Add(enrichedChunk);

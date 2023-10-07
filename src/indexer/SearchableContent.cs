@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Azure.Search.Documents.Indexes;
 
 namespace Company.Function {
@@ -16,8 +17,8 @@ namespace Company.Function {
          [SearchableField(IsFilterable = true)]
         public required string DocumentUri { get; set; }
 
-        [SimpleField(IsFilterable = true)]
-        public int ChunkIndex { get; set; }
+        [SearchableField(VectorSearchDimensions = "1536", VectorSearchConfiguration = "vector-config")]
+        public required Collection<float> Embedding { get; set; }
 
     }
 

@@ -5,6 +5,7 @@ using Azure.Identity;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Google.Protobuf.WellKnownTypes;
+using Azure.Search.Documents.Models;
 
 //https://github.com/Azure-Samples/azure-search-dotnet-samples/blob/main/quickstart-semantic-search/SemanticSearchQuickstart/Program.cs
 
@@ -52,13 +53,6 @@ namespace Company.Function {
             var fieldBuilder = new FieldBuilder();
             var searchFields = fieldBuilder.Build(typeof(SearchableContent));
 
-            var vectorField = new SearchField("Embedding", SearchFieldDataType.Collection(SearchFieldDataType.Single))
-            {
-                VectorSearchDimensions = 1536,
-                VectorSearchConfiguration = vectorConfigName
-            };
-            searchFields.Add(vectorField);
-
             var definition = new SearchIndex(IndexName, searchFields);
 
             SemanticSettings semanticSettings = new SemanticSettings();
@@ -82,9 +76,27 @@ namespace Company.Function {
             _searchIndexClient.CreateOrUpdateIndex(definition);
         }
 
-        public Task AddDocumentAsync(string chunk)
+        public async Task AddDocumentAsync(DocumentRef docRef, IReadOnlyCollection<EnrichedChunk> chunks)
         {
-            throw new NotImplementedException();
+            IndexDocumentsBatch<SearchableContent> batch = IndexDocumentsBatch.Create<SearchableContent>();
+            foreach (var chunk in chunks)
+            {
+                var item = new IndexDocumentsAction<SearchableContent>(IndexActionType.Upload, new SearchableContent() {
+                    Content = chunk.Chunk,
+                    Id = Guid.NewGuid().ToString(),
+                    DocumentId = docRef.DocumentId,
+                    DocumentUri = docRef.DocumentUri,
+                    Embedding = chunk.Embeddings.Embedding, //TODO: ugly
+                });
+                batch.Actions.Add(item);
+            }
+            
+            try {
+                await _searchClient.IndexDocumentsAsync(batch);
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+                throw new Exception("Failed to index documents.");
+            }
         }
     }
 }

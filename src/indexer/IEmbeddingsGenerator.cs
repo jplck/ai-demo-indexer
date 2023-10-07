@@ -1,9 +1,7 @@
-namespace Company.Function {
+using System.Collections.ObjectModel;
+using Microsoft.VisualBasic;
 
-    public class GenericEmbeddingItem {
-        public IReadOnlyList<float>? Embedding { get; set; }
-        public int Index { get; set; }
-    }
+namespace Company.Function {
 
     public interface IEmbeddingsGenerator
     {
