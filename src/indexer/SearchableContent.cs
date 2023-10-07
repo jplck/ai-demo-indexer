@@ -10,6 +10,12 @@ namespace Company.Function {
         [SearchableField(IsFilterable = true)]
         public string Content { get; set; }
 
+        [SearchableField(IsFilterable = true)]
+        public string DocumentId { get; set; }
+
+        [SearchableField(IsFilterable = true)]
+        public int ChunkIndex { get; set; }
+
     }
 
 }
