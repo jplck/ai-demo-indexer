@@ -37,14 +37,14 @@ namespace Company.Function
         {
             _logger = logger;
             _configuration = configuration;
-            _embeddingsGenerator = embeddingsGenerator;
             _chunker = chunker;
             _documentRecognizer = documentRecognizer;
             _search = search;
+            _embeddingsGenerator = embeddingsGenerator;
         }
 
         [Function(nameof(IndexerQueueProcessorFunc))]
-        public async Task Run([ServiceBusTrigger("docsevents", Connection = "sbaidemo_SERVICEBUS")] ServiceBusReceivedMessage message)
+        public async Task Run([ServiceBusTrigger("docsevents", Connection = "DOCUMENT_SERVICEBUS")] ServiceBusReceivedMessage message)
         {
             var blobEvent = JsonConvert.DeserializeObject<BlobCloudEvent>(message.Body.ToString());
 

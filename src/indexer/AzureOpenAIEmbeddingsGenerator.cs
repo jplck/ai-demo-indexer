@@ -11,6 +11,8 @@ namespace Company.Function {
 
         private OpenAIClient _openAIClient;
 
+        const string DEPLOYMENT_NAME = "embedding";
+
         public AzureOpenAIEmbeddingsGenerator(IConfiguration configuration) {
             _configuration = configuration;
 
@@ -23,18 +25,23 @@ namespace Company.Function {
             _openAIClient = new (new Uri(oaiEndpoint), new DefaultAzureCredential());
         }
 
-        public async Task<IReadOnlyList<GenericEmbeddingItem>> GenerateEmbeddingsAsync(List<string> chunks)
+        public async Task<IReadOnlyList<EnrichedChunk>> GenerateEmbeddingsAsync(List<string> chunks)
         {
             EmbeddingsOptions options = new (chunks);
-            var results = await _openAIClient.GetEmbeddingsAsync("embedding", options);
+            var results = await _openAIClient.GetEmbeddingsAsync(DEPLOYMENT_NAME, options);
 
-            var genericResults = new List<GenericEmbeddingItem>();
+            var enrichedChunks = new List<EnrichedChunk>();
 
             foreach (EmbeddingItem embeddingItem in results.Value.Data)
             {
-                genericResults.Add(new GenericEmbeddingItem() { Embedding = embeddingItem.Embedding, Index = embeddingItem.Index });
+                var enrichedChunk = new EnrichedChunk(
+                    chunks[embeddingItem.Index],
+                    new GenericEmbeddingItem() { Embedding = embeddingItem.Embedding, Index = embeddingItem.Index }
+                );
+                
+                enrichedChunks.Add(enrichedChunk);
             }
-            return genericResults;
+            return enrichedChunks;
         }
     }
 

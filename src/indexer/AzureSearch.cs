@@ -81,5 +81,10 @@ namespace Company.Function {
 
             _searchIndexClient.CreateOrUpdateIndex(definition);
         }
+
+        public Task AddDocumentAsync(string chunk)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
