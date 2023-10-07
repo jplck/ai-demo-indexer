@@ -18,12 +18,13 @@ namespace Company.Function {
 
         SearchIndexClient _searchIndexClient;
 
-        const string IndexName = "cognitive-search";
+        private string _indexName;
 
         public AzureSearch(IConfiguration configuration) {
             _configuration = configuration;
 
             var searchEndpoint = _configuration["COGNITIVE_SEARCH_ENDPOINT"];
+            _indexName = _configuration["COGNITIVE_SEARCH_INDEX_NAME"];
 
             if (string.IsNullOrEmpty(searchEndpoint)) {
                 throw new ArgumentNullException("Search endpoint must be provided.");
@@ -36,7 +37,7 @@ namespace Company.Function {
 
             _searchClient = new SearchClient(
                 new Uri(searchEndpoint),
-                IndexName,
+                _indexName,
                 new DefaultAzureCredential()
             );
 
@@ -49,15 +50,14 @@ namespace Company.Function {
         }
 
         private void CreateIndex() {
-            const string vectorConfigName = "vector-config";
             var fieldBuilder = new FieldBuilder();
             var searchFields = fieldBuilder.Build(typeof(SearchableContent));
 
-            var definition = new SearchIndex(IndexName, searchFields);
+            var definition = new SearchIndex(_indexName, searchFields);
 
             SemanticSettings semanticSettings = new SemanticSettings();
             semanticSettings.Configurations.Add(new SemanticConfiguration(
-                "semantic-config",
+                _configuration["SEMANTIC_CONFIG_NAME"],
                 new PrioritizedFields() {
                     ContentFields = {
                         new SemanticField {FieldName = "Content"}
@@ -65,7 +65,7 @@ namespace Company.Function {
                 }
             ));
 
-            var vectorConfig = new HnswVectorSearchAlgorithmConfiguration(vectorConfigName);
+            var vectorConfig = new HnswVectorSearchAlgorithmConfiguration(_configuration["VECTOR_CONFIG_NAME"]);
             var vectorSearch = new VectorSearch();
           
             vectorSearch.AlgorithmConfigurations.Add(vectorConfig);

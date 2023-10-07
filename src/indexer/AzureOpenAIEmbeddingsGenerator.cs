@@ -14,34 +14,34 @@ namespace Company.Function {
 
         const string DEPLOYMENT_NAME = "embedding";
 
-        public AzureOpenAIEmbeddingsGenerator(IConfiguration configuration) {
+        public AzureOpenAIEmbeddingsGenerator(IConfiguration configuration, OpenAIClient openAIClient) {
             _configuration = configuration;
-
-            var oaiEndpoint = _configuration["OPENAI_API_ENDPOINT"];
-
-            if (string.IsNullOrEmpty(oaiEndpoint)) {
-                throw new ArgumentNullException("OpenAI endpoint must be provided.");
-            }
-
-            _openAIClient = new (new Uri(oaiEndpoint), new DefaultAzureCredential());
+            _openAIClient = openAIClient;
         }
 
         public async Task<IReadOnlyList<EnrichedChunk>> GenerateEmbeddingsAsync(List<string> chunks)
         {
-            EmbeddingsOptions options = new (chunks);
-            var results = await _openAIClient.GetEmbeddingsAsync(DEPLOYMENT_NAME, options);
-
             var enrichedChunks = new List<EnrichedChunk>();
-
-            foreach (EmbeddingItem embeddingItem in results.Value.Data)
+            var chunkBlocks = (int)Math.Ceiling(chunks.Count / 16.0); //Current service limitation is 16 chunks per request
+            
+            for (int i = 0; i < chunkBlocks; i++)
             {
-                var coll = new Collection<float>(embeddingItem.Embedding.ToList()); //TODO: Find a better way to do this
-                var enrichedChunk = new EnrichedChunk(
-                    chunks[embeddingItem.Index],
-                    new GenericEmbeddingItem() { Embedding = coll, Index = embeddingItem.Index }
-                );
+                var chunkBlock = chunks.Skip(i * 16).Take(16).ToList();
                 
-                enrichedChunks.Add(enrichedChunk);
+                EmbeddingsOptions options = new (chunkBlock);
+                var results = await _openAIClient.GetEmbeddingsAsync(DEPLOYMENT_NAME, options);
+
+                foreach (EmbeddingItem embeddingItem in results.Value.Data)
+                {
+                    var coll = new Collection<float>(embeddingItem.Embedding.ToList()); //TODO: Find a better way to do this
+                    var enrichedChunk = new EnrichedChunk(
+                        chunks[embeddingItem.Index],
+                        new GenericEmbeddingItem() { Embedding = coll, Index = embeddingItem.Index }
+                    );
+                    
+                    enrichedChunks.Add(enrichedChunk);
+                }
+
             }
             return enrichedChunks;
         }
