@@ -5,6 +5,7 @@ using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.SemanticKernel;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
@@ -19,6 +20,10 @@ var host = new HostBuilder()
         services.AddSingleton<IDocumentRecognizer, DocumentIntelligence>();
         services.AddSingleton<ISearch, AzureSearch>();
         services.AddSingleton(new OpenAIClient(new Uri(configuration["OPENAI_API_ENDPOINT"]), new DefaultAzureCredential()));
+        services.AddSingleton(new KernelBuilder()
+            .WithAzureChatCompletionService(configuration["OPENAI_DEPLOYMENT_NAME"], configuration["OPENAI_API_ENDPOINT"], new DefaultAzureCredential())
+            .WithAzureTextEmbeddingGenerationService(configuration["OPENAI_EMBEDDINGS_DEPLOYMENT_NAME"], configuration["OPENAI_API_ENDPOINT"], new DefaultAzureCredential())
+            .Build());
     })
     .ConfigureAppConfiguration((context, config) => {
         config.AddConfiguration(configuration);

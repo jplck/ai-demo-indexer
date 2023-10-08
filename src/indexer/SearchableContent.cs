@@ -20,6 +20,16 @@ namespace Company.Function {
         [SearchableField(VectorSearchDimensions = "1536", VectorSearchConfiguration = "vector-config")]
         public Collection<float>? Embedding { get; set; }
 
+        public override string ToString() {
+            return @$"Id: {Id} 
+            --------------------
+            {Content}
+            --------------------
+            DocumentId: {DocumentId}
+            DocumentUri: {DocumentUri}";
+        }
     }
+
+
 
 }

@@ -27,13 +27,16 @@ namespace Company.Function
 
         IEmbeddingsGenerator _embeddingsGenerator;
 
+        IKernel _kernel;
+
         private string _indexName;
 
-        public AzureSearch(IConfiguration configuration, OpenAIClient openAIClient, IEmbeddingsGenerator embeddingsGenerator)
+        public AzureSearch(IConfiguration configuration, OpenAIClient openAIClient, IEmbeddingsGenerator embeddingsGenerator, IKernel kernel)
         {
             _configuration = configuration;
             _openAIClient = openAIClient;
             _embeddingsGenerator = embeddingsGenerator;
+            _kernel = kernel;
 
             var searchEndpoint = _configuration["COGNITIVE_SEARCH_ENDPOINT"];
             _indexName = _configuration["COGNITIVE_SEARCH_INDEX_NAME"];
@@ -59,8 +62,14 @@ namespace Company.Function
 
         public async Task<string> SearchAsync(string query)
         {
+            var chat = _kernel.GetService<IChatCompletion>();
+            var answerChat = chat.CreateNewChat($@"You are a system assistant who helps the user to get aggregated answers from his documents. Be brief in your answers");
+            answerChat.AddUserMessage(@$" ## Question ##
+            {query}
+            ## End ##");
 
             var queryEmbeddings = await _embeddingsGenerator.GenerateEmbeddingsAsync(new List<string>() { query });
+
             var vector = queryEmbeddings[0].Embeddings.Embedding.ToList();
             var searchOptions = new SearchOptions()
             {
@@ -76,35 +85,16 @@ namespace Company.Function
             };
 
             var searchResponse = await _searchClient.SearchAsync<SearchableContent>(query, searchOptions);
-
-            string results = "";
-            foreach (SearchResult<SearchableContent> result in searchResponse.Value.GetResults())
-            {
-                Console.WriteLine($"DocumentId: {result.Document.DocumentId}");
-                Console.WriteLine($"DocumentUri: {result.Document.DocumentUri}");
-                Console.WriteLine($"Content: {result.Document.Content}");
-                Console.WriteLine($"Score: {result.Score}");
-                Console.WriteLine();
-                results += result.Document.Content + "\n";
-            }
-
-            var kernel = new KernelBuilder()
-            .WithAzureChatCompletionService(_configuration["OPENAI_DEPLOYED_MODEL_NAME"], _configuration["OPENAI_API_ENDPOINT"], new DefaultAzureCredential())
-            .Build();
-
-            var chat = kernel.GetService<IChatCompletion>();
-            var answerChat = chat.CreateNewChat($@"You are a system assistant who helps the user to get aggregated answers from his documents. Be brief in your answers");
-            answerChat.AddUserMessage(@$" ## Question ##
-            {query}
-            ## End ##");
+            string results = string.Join("\n", searchResponse.Value.GetResults().Select(doc => doc.Document.ToString()).ToArray());
+            
             answerChat.AddUserMessage(@$" ## Source ##
             {results}
             ## End ##
 
-            You answer needs to be a json object with the following format.
+            You answer needs to be a valid json object with the following format and nothing more.
             {{
-                ""answer"": // the answer to the question, add a source reference to the end of each sentence. e.g. Apple is a fruit [reference1.pdf]. If no source available, put the answer as I don't know.
-                ""thoughts"": // brief thoughts on how you came up with the answer, e.g. what sources you used, what you thought about, etc.
+                ""answer"": // the answer to the question. If you have no answer you can return an no answer message.
+                ""references"": // add the list of reference documents that are contained in the source DocumentUri field. Return empty list if nothing is found.
             }}");
 
             var answer = await chat.GetChatCompletionsAsync(
@@ -117,10 +107,7 @@ namespace Company.Function
                 default
             );
             var answerJson = answer[0].ModelResult.GetOpenAIChatResult().Choice.Message.Content;
-            var answerObject = JsonSerializer.Deserialize<JsonElement>(answerJson);
-            var ans = answerObject.GetProperty("answer").GetString() ?? throw new InvalidOperationException("Failed to get answer");
-            var thoughts = answerObject.GetProperty("thoughts").GetString() ?? throw new InvalidOperationException("Failed to get thoughts");
-            return ans;
+            return answerJson;
         }
 
         private void CreateIndex()
