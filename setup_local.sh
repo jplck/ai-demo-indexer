@@ -33,8 +33,12 @@ cat <<EOF > src/indexer/local.settings.json
         "AzureWebJobsStorage": "",
         "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
         "OPENAI_API_ENDPOINT": "$OPENAI_ENDPOINT",
+        "OPENAI_DEPLOYED_MODEL_NAME": "gpt-35-turbo",
         "DI_ENDPOINT": "$DI_ENDPOINT",
         "COGNITIVE_SEARCH_ENDPOINT": "$SEARCH_ENDPOINT",
-        "DOCUMENT_SERVICEBUS": "$SERVICE_BUS_CONNECTION_STRING"
+        "COGNITIVE_SEARCH_INDEX_NAME": "cognitive-search",
+        "DOCUMENT_SERVICEBUS": "$SERVICE_BUS_CONNECTION_STRING",
+        "SEMANTIC_CONFIG_NAME": "semantic-config",
+        "VECTOR_CONFIG_NAME": "vector-config"
     }
 }

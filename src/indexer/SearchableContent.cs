@@ -18,7 +18,7 @@ namespace Company.Function {
         public required string DocumentUri { get; set; }
 
         [SearchableField(VectorSearchDimensions = "1536", VectorSearchConfiguration = "vector-config")]
-        public required Collection<float> Embedding { get; set; }
+        public Collection<float>? Embedding { get; set; }
 
     }
 
