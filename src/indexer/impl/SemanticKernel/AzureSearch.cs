@@ -7,6 +7,7 @@ using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
+using Extensions;
 
 //https://github.com/Azure-Samples/azure-search-dotnet-samples/blob/main/quickstart-semantic-search/SemanticSearchQuickstart/Program.cs
 
@@ -24,16 +25,19 @@ namespace Company.Function
 
         IKernel _kernel;
 
+        SearchOptionsFactory _searchOptionsFactory;
+
         private string _indexName;
 
-        public AzureSearch(IConfiguration configuration, IEmbeddingsGenerator embeddingsGenerator, IKernel kernel)
+        public AzureSearch(IConfiguration configuration, IEmbeddingsGenerator embeddingsGenerator, IKernel kernel, SearchOptionsFactory searchOptionsFactory)
         {
             _configuration = configuration;
             _embeddingsGenerator = embeddingsGenerator;
             _kernel = kernel;
+            _searchOptionsFactory = searchOptionsFactory;
 
-            var searchEndpoint = _configuration["COGNITIVE_SEARCH_ENDPOINT"];
-            _indexName = _configuration["COGNITIVE_SEARCH_INDEX_NAME"];
+            var searchEndpoint = _configuration.TryGet("COGNITIVE_SEARCH_ENDPOINT");
+            _indexName = _configuration.TryGet("COGNITIVE_SEARCH_INDEX_NAME");
 
             if (string.IsNullOrEmpty(searchEndpoint))
             {
@@ -57,39 +61,41 @@ namespace Company.Function
         public async Task<string> SearchAsync(string query)
         {
             var chat = _kernel.GetService<IChatCompletion>();
-            var answerChat = chat.CreateNewChat($@"You are a system assistant who helps the user to get aggregated answers from his documents. Be brief in your answers");
-            answerChat.AddUserMessage(@$" ## Question ##
-            {query}
-            ## End ##");
 
-            var queryEmbeddings = await _embeddingsGenerator.GenerateEmbeddingsAsync(new List<string>() { query });
-            var vector = queryEmbeddings[0].Embeddings;
+            var answerChat = chat.CreateNewChat(
+                $@"You are a system assistant who helps the user to get aggregated answers from his documents. Be brief in your answers"
             
-            var searchOptions = new SearchOptions()
+            );
+            answerChat.AddUserMessage(
+                @$" ## Question ##
+                {query}
+                ## End ##"
+            );
+
+            var queryEmbeddings = await _embeddingsGenerator.GenerateEmbeddingsAsync(query);
+            var vector = queryEmbeddings.FirstOrDefault()?.Embeddings;
+
+            if (vector is null)
             {
-                Vectors = { new() { Value = vector, KNearestNeighborsCount = 3, Fields = { "Embedding" } } },
-                Size = 3,
-                QueryType = SearchQueryType.Semantic,
-                QueryLanguage = QueryLanguage.EnUs,
-                SemanticConfigurationName = _configuration["SEMANTIC_CONFIG_NAME"],
-                QueryCaption = QueryCaptionType.Extractive,
-                QueryAnswer = QueryAnswerType.Extractive,
-                QueryCaptionHighlightEnabled = true,
-                Select = { "Id", "DocumentId", "DocumentUri", "Content" }
-            };
+                throw new Exception("Failed to generate embeddings.");
+            }
+
+            var searchOptions = _searchOptionsFactory.Create(vector);
 
             var searchResponse = await _searchClient.SearchAsync<SearchableContent>(query, searchOptions);
             string results = $"[{string.Join("\n,", searchResponse.Value.GetResults().Select(doc => doc.Document.ToString()).ToArray())}]";
             
-            answerChat.AddUserMessage(@$" ## Source ##
-            {results}
-            ## End ##
+            answerChat.AddUserMessage(
+                @$" ## Source ##
+                {results}
+                ## End ##
 
-            You answer needs to be a valid json object with the following format and nothing more.
-            {{
-                ""answer"": // the answer to the question. If you have no answer you can return an no answer message.
-                ""references"": // add the list of reference documents that are contained in the source DocumentUri field. Return empty list if nothing is found.
-            }}");
+                Your answer needs to be a valid json object with the following format and nothing more.
+                {{
+                    ""answer"": // the answer to the question. If you have no answer you can return an no answer message.
+                    ""references"": // add the list of reference documents that are contained in the source DocumentUri field. Return empty list if nothing is found.
+                }}"
+            );
 
             var answer = await chat.GetChatCompletionsAsync(
                 answerChat,
@@ -113,7 +119,7 @@ namespace Company.Function
 
             SemanticSettings semanticSettings = new SemanticSettings();
             semanticSettings.Configurations.Add(new SemanticConfiguration(
-                _configuration["SEMANTIC_CONFIG_NAME"],
+                _configuration.TryGet("SEMANTIC_CONFIG_NAME"),
                 new PrioritizedFields()
                 {
                     ContentFields = {
@@ -122,7 +128,7 @@ namespace Company.Function
                 }
             ));
 
-            var vectorConfig = new HnswVectorSearchAlgorithmConfiguration(_configuration["VECTOR_CONFIG_NAME"]);
+            var vectorConfig = new HnswVectorSearchAlgorithmConfiguration(_configuration.TryGet("VECTOR_CONFIG_NAME"));
             var vectorSearch = new VectorSearch();
 
             vectorSearch.AlgorithmConfigurations.Add(vectorConfig);
@@ -133,19 +139,13 @@ namespace Company.Function
             _searchIndexClient.CreateOrUpdateIndex(definition);
         }
 
-        public async Task AddDocumentAsync(DocumentRef docRef, IReadOnlyCollection<EnrichedChunk> chunks)
+        public async Task AddDocumentAsync(IReadOnlyCollection<Chunk> chunks)
         {
             IndexDocumentsBatch<SearchableContent> batch = IndexDocumentsBatch.Create<SearchableContent>();
+
             foreach (var chunk in chunks)
             {
-                var item = new IndexDocumentsAction<SearchableContent>(IndexActionType.Upload, new SearchableContent()
-                {
-                    Content = chunk.Chunk,
-                    Id = Guid.NewGuid().ToString(),
-                    DocumentId = docRef.DocumentId,
-                    DocumentUri = docRef.DocumentUri,
-                    Embedding = chunk.Embeddings
-                });
+                var item = new IndexDocumentsAction<SearchableContent>(IndexActionType.Upload, new SearchableContent(chunk));
                 batch.Actions.Add(item);
             }
 

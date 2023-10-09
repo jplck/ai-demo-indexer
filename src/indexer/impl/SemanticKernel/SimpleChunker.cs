@@ -4,10 +4,10 @@ using Microsoft.SemanticKernel.Text;
 namespace Company.Function {
     public class SimpleChunker : IChunker
     {
-        public List<string>? Chunk(string content, int sizeOfChunk = 256)
+        public IReadOnlyCollection<Chunk>? Chunk(string documentUri, string content, int sizeOfChunk = 256)
         {
             var lines = TextChunker.SplitPlainTextLines(content, sizeOfChunk);
-            return lines;
+            return lines.Select((line, index) => new Chunk(documentUri, line)).ToList();
         }
     }
 }

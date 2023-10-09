@@ -1,4 +1,5 @@
 using Azure.Identity;
+using Azure.Search.Documents;
 using Company.Function;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ var host = new HostBuilder()
         services.AddSingleton<IChunker, SimpleChunker>();
         services.AddSingleton<IDocumentRecognizer, DocumentIntelligence>();
         services.AddSingleton<ISearch, AzureSearch>();
+        services.AddSingleton<SearchOptionsFactory>();
         services.AddSingleton(new KernelBuilder()
             .WithAzureChatCompletionService(configuration["OPENAI_DEPLOYMENT_NAME"], configuration["OPENAI_API_ENDPOINT"], new DefaultAzureCredential())
             .WithAzureTextEmbeddingGenerationService(configuration["OPENAI_EMBEDDINGS_DEPLOYMENT_NAME"], configuration["OPENAI_API_ENDPOINT"], new DefaultAzureCredential())

@@ -1,5 +1,5 @@
 namespace Company.Function {
     public interface IChunker {
-        List<string>? Chunk(string content, int sizeOfChunk = 256);
+        IReadOnlyCollection<Chunk>? Chunk(string documentUri, string content, int sizeOfChunk = 256);
     }
 }

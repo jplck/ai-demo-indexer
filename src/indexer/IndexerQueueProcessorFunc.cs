@@ -57,17 +57,15 @@ namespace Company.Function
                     return;
                 }
                 
-                var chunks = _chunker.Chunk(documentContent);
+                var chunks = _chunker.Chunk(blobEvent.Data.Url, documentContent);
 
                 if (chunks is null) {
                     _logger.LogDebug("chunks is null.");
                     return;
                 }
 
-                var documentRef = new DocumentRef(chunks, blobEvent.Data.Url);
-
                 var embeddings = await _embeddingsGenerator.GenerateEmbeddingsAsync(chunks);
-                await _search.AddDocumentAsync(documentRef, embeddings);
+                await _search.AddDocumentAsync(chunks);
 
                 _logger.LogDebug("embeddings generated.");
             }

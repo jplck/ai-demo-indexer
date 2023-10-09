@@ -5,7 +5,9 @@ namespace Company.Function {
 
     public interface IEmbeddingsGenerator
     {
-        Task<IReadOnlyList<EnrichedChunk>> GenerateEmbeddingsAsync(List<string> chunks);
+        Task<IReadOnlyCollection<Chunk>> GenerateEmbeddingsAsync(IReadOnlyCollection<Chunk> chunks);
+
+        Task<IReadOnlyCollection<Chunk>> GenerateEmbeddingsAsync(string chunk);
     }
 
 }
