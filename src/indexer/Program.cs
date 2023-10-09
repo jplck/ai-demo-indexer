@@ -1,7 +1,5 @@
-using Azure.AI.OpenAI;
 using Azure.Identity;
 using Company.Function;
-using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,7 +17,6 @@ var host = new HostBuilder()
         services.AddSingleton<IChunker, SimpleChunker>();
         services.AddSingleton<IDocumentRecognizer, DocumentIntelligence>();
         services.AddSingleton<ISearch, AzureSearch>();
-        services.AddSingleton(new OpenAIClient(new Uri(configuration["OPENAI_API_ENDPOINT"]), new DefaultAzureCredential()));
         services.AddSingleton(new KernelBuilder()
             .WithAzureChatCompletionService(configuration["OPENAI_DEPLOYMENT_NAME"], configuration["OPENAI_API_ENDPOINT"], new DefaultAzureCredential())
             .WithAzureTextEmbeddingGenerationService(configuration["OPENAI_EMBEDDINGS_DEPLOYMENT_NAME"], configuration["OPENAI_API_ENDPOINT"], new DefaultAzureCredential())

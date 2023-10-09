@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Reflection.Metadata;
 using Azure.Search.Documents.Indexes;
 using Newtonsoft.Json;
 
@@ -26,7 +27,4 @@ namespace Company.Function {
             return JsonConvert.SerializeObject(this);
         }
     }
-
-
-
 }

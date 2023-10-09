@@ -1,8 +1,4 @@
 using System.Collections.ObjectModel;
-using Azure;
-using Azure.AI.OpenAI;
-using Azure.Identity;
-using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.AI.Embeddings;
 
@@ -10,16 +6,11 @@ namespace Company.Function {
 
     public class AzureOpenAIEmbeddingsGenerator : IEmbeddingsGenerator {
 
-        private readonly IConfiguration _configuration;
-
         private ITextEmbeddingGeneration _embeddingGenerator;
 
         private IKernel _kernel;
 
-        const string DEPLOYMENT_NAME = "embedding";
-
-        public AzureOpenAIEmbeddingsGenerator(IConfiguration configuration, IKernel kernel) {
-            _configuration = configuration;
+        public AzureOpenAIEmbeddingsGenerator(IKernel kernel) {
             _kernel = kernel;
             _embeddingGenerator = _kernel.GetService<ITextEmbeddingGeneration>();
         }
@@ -35,13 +26,13 @@ namespace Company.Function {
             {
                 var chunkBlock = chunks.Skip(i * 16).Take(16).ToList();                
                 var results = await _embeddingGenerator.GenerateEmbeddingsAsync(chunkBlock);
-                
+
                 foreach (var embeddingItem in results)
                 {
                     var coll = new Collection<float>(embeddingItem.ToArray()); //TODO: Find a better way to do this
                     var enrichedChunk = new EnrichedChunk(
                         chunks[idx],
-                        new GenericEmbeddingItem() { Embedding = coll, Index = idx }
+                        coll
                     );
                     
                     enrichedChunks.Add(enrichedChunk);

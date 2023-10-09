@@ -5,11 +5,8 @@ using Azure.Identity;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
-using Azure.AI.OpenAI;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.Memory.AzureCognitiveSearch;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
-using System.Text.Json;
 
 //https://github.com/Azure-Samples/azure-search-dotnet-samples/blob/main/quickstart-semantic-search/SemanticSearchQuickstart/Program.cs
 
@@ -23,18 +20,15 @@ namespace Company.Function
 
         SearchIndexClient _searchIndexClient;
 
-        OpenAIClient _openAIClient;
-
         IEmbeddingsGenerator _embeddingsGenerator;
 
         IKernel _kernel;
 
         private string _indexName;
 
-        public AzureSearch(IConfiguration configuration, OpenAIClient openAIClient, IEmbeddingsGenerator embeddingsGenerator, IKernel kernel)
+        public AzureSearch(IConfiguration configuration, IEmbeddingsGenerator embeddingsGenerator, IKernel kernel)
         {
             _configuration = configuration;
-            _openAIClient = openAIClient;
             _embeddingsGenerator = embeddingsGenerator;
             _kernel = kernel;
 
@@ -69,8 +63,8 @@ namespace Company.Function
             ## End ##");
 
             var queryEmbeddings = await _embeddingsGenerator.GenerateEmbeddingsAsync(new List<string>() { query });
-
-            var vector = queryEmbeddings[0].Embeddings.Embedding.ToList();
+            var vector = queryEmbeddings[0].Embeddings;
+            
             var searchOptions = new SearchOptions()
             {
                 Vectors = { new() { Value = vector, KNearestNeighborsCount = 3, Fields = { "Embedding" } } },
@@ -150,7 +144,7 @@ namespace Company.Function
                     Id = Guid.NewGuid().ToString(),
                     DocumentId = docRef.DocumentId,
                     DocumentUri = docRef.DocumentUri,
-                    Embedding = chunk.Embeddings.Embedding, //TODO: ugly
+                    Embedding = chunk.Embeddings
                 });
                 batch.Actions.Add(item);
             }
