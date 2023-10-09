@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Azure.Search.Documents.Indexes;
+using Newtonsoft.Json;
 
 namespace Company.Function {
 
@@ -18,15 +19,11 @@ namespace Company.Function {
         public required string DocumentUri { get; set; }
 
         [SearchableField(VectorSearchDimensions = "1536", VectorSearchConfiguration = "vector-config")]
+        [JsonIgnore]
         public Collection<float>? Embedding { get; set; }
 
         public override string ToString() {
-            return @$"Id: {Id} 
-            --------------------
-            {Content}
-            --------------------
-            DocumentId: {DocumentId}
-            DocumentUri: {DocumentUri}";
+            return JsonConvert.SerializeObject(this);
         }
     }
 

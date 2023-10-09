@@ -85,7 +85,7 @@ namespace Company.Function
             };
 
             var searchResponse = await _searchClient.SearchAsync<SearchableContent>(query, searchOptions);
-            string results = string.Join("\n", searchResponse.Value.GetResults().Select(doc => doc.Document.ToString()).ToArray());
+            string results = $"[{string.Join("\n,", searchResponse.Value.GetResults().Select(doc => doc.Document.ToString()).ToArray())}]";
             
             answerChat.AddUserMessage(@$" ## Source ##
             {results}
