@@ -8,16 +8,16 @@ namespace Company.Function {
     public partial class SearchableContent {
         
         [SimpleField(IsKey = true, IsFilterable = true)]
-        public string Id { get; set; }
+        public required string Id { get; set; }
 
         [SearchableField(IsFilterable = true)]
-        public string Content { get; set; }
+        public required string Content { get; set; }
 
         [SearchableField(IsFilterable = true)]
-        public string DocumentId { get; set; }
+        public required string DocumentId { get; set; }
 
          [SearchableField(IsFilterable = true)]
-        public string DocumentUri { get; set; }
+        public required string DocumentUri { get; set; }
 
         [SearchableField(VectorSearchDimensions = "1536", VectorSearchConfiguration = "vector-config")]
         [JsonIgnore]
@@ -25,14 +25,6 @@ namespace Company.Function {
 
         public override string ToString() {
             return JsonConvert.SerializeObject(this);
-        }
-
-        public SearchableContent(Chunk chunk) {
-            Id = Guid.NewGuid().ToString();
-            Content = chunk.Content;
-            DocumentId = chunk.DocumentId;
-            DocumentUri = chunk.DocumentUri;
-            Embedding = chunk.Embeddings;
         }
     }
 }

@@ -145,7 +145,14 @@ namespace Company.Function
 
             foreach (var chunk in chunks)
             {
-                var item = new IndexDocumentsAction<SearchableContent>(IndexActionType.Upload, new SearchableContent(chunk));
+                var item = new IndexDocumentsAction<SearchableContent>(IndexActionType.Upload, new SearchableContent
+                {
+                    Id = chunk.Id,
+                    DocumentId = chunk.DocumentId,
+                    DocumentUri = chunk.DocumentUri,
+                    Content = chunk.Content,
+                    Embedding = chunk.Embeddings
+                });
                 batch.Actions.Add(item);
             }
 

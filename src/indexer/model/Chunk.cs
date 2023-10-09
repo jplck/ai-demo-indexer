@@ -12,7 +12,10 @@ namespace Company.Function {
 
         public string DocumentId { get;}
 
+        public string Id { get; }
+
         public Chunk(string content, string documentUri) {
+            Id = new Guid().ToString();
             Content = content;
             DocumentUri = documentUri;
             var hash = MD5.Create(); //Find a better way. SHA does not work as it is longer than 16bit.
@@ -20,6 +23,7 @@ namespace Company.Function {
         }
 
         public Chunk(string content) {
+            Id = new Guid().ToString();
             Content = content;
             DocumentUri = string.Empty;
             DocumentId = string.Empty;
