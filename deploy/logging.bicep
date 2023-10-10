@@ -1,4 +1,3 @@
-@description('Specifies the Azure location for all resources.')
 param location string = resourceGroup().location
 
 param logAnalyticsWorkspaceName string 

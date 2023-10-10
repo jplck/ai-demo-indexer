@@ -1,16 +1,6 @@
-@description('Specifies the Azure location for all resources.')
 param location string = resourceGroup().location
-
 param storageAccountName string
-
 param containerNames array
-
-@description('Storage Account type')
-@allowed([
-  'Standard_LRS'
-  'Standard_GRS'
-  'Standard_RAGRS'
-])
 param storageAccountType string = 'Standard_LRS'
 
 

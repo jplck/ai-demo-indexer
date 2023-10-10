@@ -1,10 +1,5 @@
-@description('Name of the Service Bus namespace')
 param serviceBusNamespaceName string
-
-@description('Name of the Queue')
 param serviceBusQueueName string
-
-@description('Location for all resources.')
 param location string = resourceGroup().location
 
 resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-01-01-preview' = {

@@ -6,6 +6,8 @@ param projectName string
 
 targetScope = 'subscription'
 
+var docsToIndexContainerName = 'docs_to_index'
+
 resource rg 'Microsoft.Resources/resourceGroups@2021-01-01' = {
   name: '${projectName}-rg'
   location: location
@@ -28,7 +30,7 @@ module docs_storage 'storage.bicep' = {
     location: location
     storageAccountName: 'docs${projectName}'
     containerNames: [
-      'docs_to_index'
+      docsToIndexContainerName
     ]
   }
 }
@@ -49,11 +51,8 @@ module indexer_func 'indexer.bicep' = {
   params: {
     location: location
     webJobStorageAccountName: indexer_func_storage.outputs.storageAccountName
-    documentsToIndexStorageAccountName: docs_storage.outputs.storageAccountName
     applicationInsightsName: logging.outputs.appInsightsName
     appName: 'indexerfunc${projectName}'
-    serviceBusQueueName: servicebus.outputs.serviceBusQueueName
-    serviceBusNamespaceName: servicebus.outputs.serviceBusNamespaceName
   }
 }
 
@@ -76,5 +75,17 @@ module servicebus 'servicebus.bicep' = {
     location: location
     serviceBusNamespaceName: 'sb-${projectName}'
     serviceBusQueueName: 'docsevents'
+  }
+}
+
+module event_subscriptions 'event_subscriptions.bicep' = {
+  name: 'event_subscriptions'
+  scope: rg
+  params: {
+    location: location
+    serviceBusNamespaceName: servicebus.outputs.serviceBusNamespaceName
+    serviceBusQueueName: servicebus.outputs.serviceBusQueueName
+    documentsToIndexStorageAccountName: docs_storage.outputs.storageAccountName
+    documentToIndexStorageContainerName: docsToIndexContainerName
   }
 }
