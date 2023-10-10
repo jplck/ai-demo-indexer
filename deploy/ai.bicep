@@ -5,10 +5,10 @@ param openAISku string = 'S0'
 param searchSku string = 'standard'
 param docIntSku string = 'S0'
 param projectName string
-param indexerStorageAccountName string
+param documentsToIndexStorageAccountName string
 
-resource indexerStorageAccount 'Microsoft.Storage/storageAccounts@2021-08-01' existing = {
-  name: indexerStorageAccountName
+resource documentsToIndexStorageAccount 'Microsoft.Storage/storageAccounts@2021-08-01' existing = {
+  name: documentsToIndexStorageAccountName
 }
 
 resource openAIAccount 'Microsoft.CognitiveServices/accounts@2022-03-01' = {
@@ -74,8 +74,8 @@ var roleDefinitionIDs = [
 ]
 
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for roleDefinitionID in roleDefinitionIDs: {
-  name: guid(documentIntAccount.name, roleDefinitionID, resourceGroup().id)
-  scope: indexerStorageAccount
+  name: guid('${documentsToIndexStorageAccount}-${documentIntAccount.name}', roleDefinitionID, resourceGroup().id)
+  scope: documentsToIndexStorageAccount
   properties: {
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', roleDefinitionID)
     principalId: documentIntAccount.identity.principalId

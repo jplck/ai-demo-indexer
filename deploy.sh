@@ -30,7 +30,7 @@ RESOURCE_GROUP="$PROJECT_NAME-rg"
 AZURE_CORE_ONLY_SHOW_ERRORS="True"
 
 az deployment sub create \
-  --name "deploy-infra_for_resilient-cloud-apps" \
+  --name "deploy-ai-indexer-demo-infra" \
   --location $LOCATION \
   --template-file ./deploy/main.bicep \
   --parameters projectName=$PROJECT_NAME
