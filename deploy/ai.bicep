@@ -74,7 +74,7 @@ var roleDefinitionIDs = [
 ]
 
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for roleDefinitionID in roleDefinitionIDs: {
-  name: guid('${documentsToIndexStorageAccount}-${documentIntAccount.name}', roleDefinitionID, resourceGroup().id)
+  name: guid(documentIntAccount.name, roleDefinitionID, resourceGroup().id, documentsToIndexStorageAccountName)
   scope: documentsToIndexStorageAccount
   properties: {
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', roleDefinitionID)
