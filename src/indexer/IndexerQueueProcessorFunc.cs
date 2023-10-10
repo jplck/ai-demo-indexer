@@ -57,7 +57,7 @@ namespace Company.Function
                     return;
                 }
                 
-                var chunks = _chunker.Chunk(blobEvent.Data.Url, documentContent);
+                var chunks = _chunker.Chunk(blobEvent.Data.Url, documentContent, 2048);
 
                 if (chunks is null) {
                     _logger.LogDebug("chunks is null.");

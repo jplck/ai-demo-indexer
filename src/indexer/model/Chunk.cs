@@ -1,32 +1,42 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
+using Azure.Search.Documents.Indexes;
+using Newtonsoft.Json;
 
 namespace Company.Function {
-    public class Chunk {
-        public string Content { get; set;}
 
-        public Collection<float>? Embeddings { get; set;}
+    public partial class Chunk {
+        
+        [SimpleField(IsKey = true, IsFilterable = true)]
+        public required string Id { get; set; }
 
-        public string DocumentUri { get; set;}
+        [SearchableField(IsFilterable = true)]
+        public required string Content { get; set; }
 
-        public string DocumentId { get;}
+        [SearchableField(IsFilterable = true)]
+        public required string DocumentId { get; set; }
 
-        public string Id { get; }
+         [SearchableField(IsFilterable = true)]
+        public required string DocumentUri { get; set; }
 
-        public Chunk(string content, string documentUri) {
-            Id = new Guid().ToString();
+        [SearchableField(VectorSearchDimensions = "1536", VectorSearchConfiguration = "vector-config")]
+        [JsonIgnore]
+        public Collection<float>? Embedding { get; set; }
+
+        [SetsRequiredMembers]
+        public Chunk(string content, string documentUri = "") {
+            Id = Guid.NewGuid().ToString();
             Content = content;
+            DocumentUri = Id;
             DocumentUri = documentUri;
-            var hash = MD5.Create(); //Find a better way. SHA does not work as it is longer than 16bit.
-            DocumentId = new Guid(hash.ComputeHash(Encoding.ASCII.GetBytes(documentUri))).ToString();
+            DocumentId = new Guid(MD5.Create().ComputeHash(Encoding.ASCII.GetBytes(documentUri))).ToString();
         }
 
-        public Chunk(string content) {
-            Id = new Guid().ToString();
-            Content = content;
-            DocumentUri = string.Empty;
-            DocumentId = string.Empty;
+        public override string ToString() {
+            return JsonConvert.SerializeObject(this);
         }
     }
 }

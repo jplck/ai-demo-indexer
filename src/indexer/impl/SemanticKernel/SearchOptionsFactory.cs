@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using Extensions;
-using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Configuration;
 
 namespace Company.Function {
@@ -16,7 +15,7 @@ namespace Company.Function {
 
             var searchOptions = new SearchOptions()
             {
-                Size = 3,
+                Size = 8,
                 QueryLanguage = QueryLanguage.EnUs,
                 SemanticConfigurationName = _configuration.TryGet("SEMANTIC_CONFIG_NAME"),
                 QueryCaption = QueryCaptionType.Extractive,

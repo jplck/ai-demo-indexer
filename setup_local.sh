@@ -15,6 +15,16 @@ DI_RESOURCE_NAME="documentInt-$PROJECT_NAME"
 SEARCH_RESOURCE_NAME="search-$PROJECT_NAME"
 SB_RESOURCE_NAME="sb-$PROJECT_NAME"
 
+USER_ID=$(az ad signed-in-user show --query id -o tsv)
+
+if [ "$USER_ID" == "" ]; then
+echo "No logged in user found. Use az login before running this script. - aborting"
+exit 0;
+fi
+
+DI_RESOURCE_ID=$(az cognitiveservices account list --query "[?name=='$DI_RESOURCE_NAME'].id" -o tsv)
+DI_USER_ROLE=${az role assignment create --assignee-object-id $USER_ID --assignee-principal-type user --role "Cognitive Services User" --scope $DI_RESOURCE_ID}
+
 #az cli command to get primary endpoint for openai
 OPENAI_ENDPOINT=$(az cognitiveservices account show --name $OAI_RESOURCE_NAME --resource-group $RESOURCE_GROUP --query "properties.endpoint" --output tsv)
 DI_ENDPOINT=$(az cognitiveservices account show --name $DI_RESOURCE_NAME --resource-group $RESOURCE_GROUP --query "properties.endpoint" --output tsv)

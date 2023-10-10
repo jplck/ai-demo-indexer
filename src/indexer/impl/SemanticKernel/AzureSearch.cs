@@ -73,7 +73,7 @@ namespace Company.Function
             );
 
             var queryEmbeddings = await _embeddingsGenerator.GenerateEmbeddingsAsync(query);
-            var vector = queryEmbeddings.FirstOrDefault()?.Embeddings;
+            var vector = queryEmbeddings.FirstOrDefault()?.Embedding;
 
             if (vector is null)
             {
@@ -82,7 +82,7 @@ namespace Company.Function
 
             var searchOptions = _searchOptionsFactory.Create(vector);
 
-            var searchResponse = await _searchClient.SearchAsync<SearchableContent>(query, searchOptions);
+            var searchResponse = await _searchClient.SearchAsync<Chunk>(query, searchOptions);
             string results = $"[{string.Join("\n,", searchResponse.Value.GetResults().Select(doc => doc.Document.ToString()).ToArray())}]";
 
             answerChat.AddUserMessage(
@@ -115,7 +115,7 @@ namespace Company.Function
             var index = _searchIndexClient.TryGetIndex(_indexName);
             if (index is null) {
                 var fieldBuilder = new FieldBuilder();
-                var searchFields = fieldBuilder.Build(typeof(SearchableContent));
+                var searchFields = fieldBuilder.Build(typeof(Chunk));
 
                 var definition = new SearchIndex(_indexName, searchFields);
 
@@ -144,18 +144,11 @@ namespace Company.Function
 
         public async Task AddDocumentAsync(IReadOnlyCollection<Chunk> chunks)
         {
-            IndexDocumentsBatch<SearchableContent> batch = IndexDocumentsBatch.Create<SearchableContent>();
+            IndexDocumentsBatch<Chunk> batch = IndexDocumentsBatch.Create<Chunk>();
 
             foreach (var chunk in chunks)
             {
-                var item = new IndexDocumentsAction<SearchableContent>(IndexActionType.Upload, new SearchableContent
-                {
-                    Id = chunk.Id,
-                    DocumentId = chunk.DocumentId,
-                    DocumentUri = chunk.DocumentUri,
-                    Content = chunk.Content,
-                    Embedding = chunk.Embeddings
-                });
+                var item = new IndexDocumentsAction<Chunk>(IndexActionType.Upload, chunk);
                 batch.Actions.Add(item);
             }
 
