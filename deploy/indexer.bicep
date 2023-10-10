@@ -6,7 +6,9 @@ param location string = resourceGroup().location
 
 param runtime string = 'dotnet'
 
-param storageAccountName string
+param webJobStorageAccountName string
+
+param documentsToIndexStorageAccountName string
 
 param applicationInsightsName string
 
@@ -21,8 +23,12 @@ var functionWorkerRuntime = runtime
 var systemTopicName = 'storageeventtopic'
 var blobToFuncEventSubscriptionName = 'blobToFuncEventSubscription'
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-08-01' existing = {
-  name: storageAccountName
+resource webJobStorageAccount 'Microsoft.Storage/storageAccounts@2021-08-01' existing = {
+  name: webJobStorageAccountName
+}
+
+resource documentsToIndexStorageAccount 'Microsoft.Storage/storageAccounts@2021-08-01' existing = {
+  name: documentsToIndexStorageAccountName
 }
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
@@ -36,7 +42,7 @@ resource systemTopic 'Microsoft.EventGrid/systemTopics@2021-12-01' = {
   name: systemTopicName
   location: location
   properties: {
-    source: storageAccount.id
+    source: documentsToIndexStorageAccount.id
     topicType: 'Microsoft.Storage.StorageAccounts'
   }
 }
@@ -83,11 +89,11 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${webJobStorageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${webJobStorageAccount.listKeys().keys[0].value}'
         }
         {
           name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${webJobStorageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${webJobStorageAccount.listKeys().keys[0].value}'
         }
         {
           name: 'WEBSITE_CONTENTSHARE'

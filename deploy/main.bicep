@@ -28,17 +28,17 @@ module docs_storage 'storage.bicep' = {
     location: location
     storageAccountName: 'docs${projectName}'
     containerNames: [
-      'docs'
+      'docs_to_index'
     ]
   }
 }
 
-module indexer_storage 'storage.bicep' = {
-  name: 'indexer_storage'
+module indexer_func_storage 'storage.bicep' = {
+  name: 'indexer_func_storage'
   scope: rg
   params: {
     location: location
-    storageAccountName: 'indexerstor${projectName}'
+    storageAccountName: 'indexerfuncstor${projectName}'
     containerNames: []
   }
 }
@@ -48,7 +48,8 @@ module indexer_func 'indexer.bicep' = {
   scope: rg
   params: {
     location: location
-    storageAccountName: indexer_storage.outputs.storageAccountName
+    webJobStorageAccountName: indexer_func_storage.outputs.storageAccountName
+    documentsToIndexStorageAccountName: docs_storage.outputs.storageAccountName
     applicationInsightsName: logging.outputs.appInsightsName
     appName: 'indexerfunc${projectName}'
     serviceBusQueueName: servicebus.outputs.serviceBusQueueName
@@ -64,7 +65,7 @@ module ai 'ai.bicep' = {
     openaiDeploymentName: 'openai-${projectName}'
     documentIntDeploymentName: 'documentInt-${projectName}'
     projectName: projectName
-    indexerStorageAccountName: indexer_storage.outputs.storageAccountName
+    indexerStorageAccountName: indexer_func_storage.outputs.storageAccountName
   }
 }
 
