@@ -6,7 +6,7 @@ param projectName string
 
 targetScope = 'subscription'
 
-var docsToIndexContainerName = 'docs_to_index'
+var docsToIndexContainerName = 'docstoindex'
 
 resource rg 'Microsoft.Resources/resourceGroups@2021-01-01' = {
   name: '${projectName}-rg'
