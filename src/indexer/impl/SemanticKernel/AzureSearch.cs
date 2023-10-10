@@ -64,7 +64,7 @@ namespace Company.Function
 
             var answerChat = chat.CreateNewChat(
                 $@"You are a system assistant who helps the user to get aggregated answers from his documents. Be brief in your answers"
-            
+
             );
             answerChat.AddUserMessage(
                 @$" ## Question ##
@@ -84,7 +84,7 @@ namespace Company.Function
 
             var searchResponse = await _searchClient.SearchAsync<SearchableContent>(query, searchOptions);
             string results = $"[{string.Join("\n,", searchResponse.Value.GetResults().Select(doc => doc.Document.ToString()).ToArray())}]";
-            
+
             answerChat.AddUserMessage(
                 @$" ## Source ##
                 {results}
@@ -112,31 +112,34 @@ namespace Company.Function
 
         private void CreateIndex()
         {
-            var fieldBuilder = new FieldBuilder();
-            var searchFields = fieldBuilder.Build(typeof(SearchableContent));
+            var index = _searchIndexClient.TryGetIndex(_indexName);
+            if (index is null) {
+                var fieldBuilder = new FieldBuilder();
+                var searchFields = fieldBuilder.Build(typeof(SearchableContent));
 
-            var definition = new SearchIndex(_indexName, searchFields);
+                var definition = new SearchIndex(_indexName, searchFields);
 
-            SemanticSettings semanticSettings = new SemanticSettings();
-            semanticSettings.Configurations.Add(new SemanticConfiguration(
-                _configuration.TryGet("SEMANTIC_CONFIG_NAME"),
-                new PrioritizedFields()
-                {
-                    ContentFields = {
+                SemanticSettings semanticSettings = new SemanticSettings();
+                semanticSettings.Configurations.Add(new SemanticConfiguration(
+                    _configuration.TryGet("SEMANTIC_CONFIG_NAME"),
+                    new PrioritizedFields()
+                    {
+                        ContentFields = {
                         new SemanticField {FieldName = "Content"}
+                        }
                     }
-                }
-            ));
+                ));
 
-            var vectorConfig = new HnswVectorSearchAlgorithmConfiguration(_configuration.TryGet("VECTOR_CONFIG_NAME"));
-            var vectorSearch = new VectorSearch();
+                var vectorConfig = new HnswVectorSearchAlgorithmConfiguration(_configuration.TryGet("VECTOR_CONFIG_NAME"));
+                var vectorSearch = new VectorSearch();
 
-            vectorSearch.AlgorithmConfigurations.Add(vectorConfig);
+                vectorSearch.AlgorithmConfigurations.Add(vectorConfig);
 
-            definition.SemanticSettings = semanticSettings;
-            definition.VectorSearch = vectorSearch;
-
-            _searchIndexClient.CreateOrUpdateIndex(definition);
+                definition.SemanticSettings = semanticSettings;
+                definition.VectorSearch = vectorSearch;
+                _searchIndexClient.CreateOrUpdateIndex(definition);
+            }
+            
         }
 
         public async Task AddDocumentAsync(IReadOnlyCollection<Chunk> chunks)
