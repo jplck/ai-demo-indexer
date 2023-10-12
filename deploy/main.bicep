@@ -8,6 +8,11 @@ targetScope = 'subscription'
 
 var docsToIndexContainerName = 'docstoindex'
 
+var serviceBusQueueNames = [
+  'docsevents'
+  'docscontent'
+]
+
 resource rg 'Microsoft.Resources/resourceGroups@2021-01-01' = {
   name: '${projectName}-rg'
   location: location
@@ -74,7 +79,7 @@ module servicebus 'servicebus.bicep' = {
   params: {
     location: location
     serviceBusNamespaceName: 'sb-${projectName}'
-    serviceBusQueueName: 'docsevents'
+    serviceBusQueueNames: serviceBusQueueNames
   }
 }
 
@@ -84,7 +89,7 @@ module event_subscriptions 'event_subscriptions.bicep' = {
   params: {
     location: location
     serviceBusNamespaceName: servicebus.outputs.serviceBusNamespaceName
-    serviceBusQueueName: servicebus.outputs.serviceBusQueueName
+    serviceBusQueueName: serviceBusQueueNames[0]
     documentsToIndexStorageAccountName: docs_storage.outputs.storageAccountName
     documentToIndexStorageContainerName: docsToIndexContainerName
   }

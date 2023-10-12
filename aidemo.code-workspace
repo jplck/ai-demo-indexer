@@ -1,0 +1,33 @@
+//https://github.com/microsoft/vscode-azurefunctions/wiki/Multiple-function-projects
+
+{
+    "folders": [
+        {
+            "path": "./src/indexer"
+        },
+        {
+            "path": "./src/recognizer"
+        },
+        {
+            "path": "./deploy"
+        },
+        {
+            "path": "./setup"
+        },
+    ],
+    "settings": {
+        "debug.internalConsoleOptions": "neverOpen"
+    },
+    "launch": {
+        "configurations": [],
+        "compounds": [
+            {
+                "name": "Run all functions",
+                "configurations": [
+                    "Attach_Indexer_Func",
+                    "Attach_Recognizer_Func"
+                ]
+            }
+        ]
+    }
+}

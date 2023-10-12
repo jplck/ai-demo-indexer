@@ -16,7 +16,6 @@ var host = new HostBuilder()
     .ConfigureServices((context, services) => {
         services.AddSingleton<IEmbeddingsGenerator, AzureOpenAIEmbeddingsGenerator>();
         services.AddSingleton<IChunker, SimpleChunker>();
-        services.AddSingleton<IDocumentRecognizer, DocumentIntelligence>();
         services.AddSingleton<ISearch, AzureSearch>();
         services.AddSingleton<SearchOptionsFactory>();
         services.AddSingleton(new KernelBuilder()

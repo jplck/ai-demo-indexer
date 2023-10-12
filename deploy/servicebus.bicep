@@ -1,5 +1,5 @@
 param serviceBusNamespaceName string
-param serviceBusQueueName string
+param serviceBusQueueNames array
 param location string = resourceGroup().location
 
 resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-01-01-preview' = {
@@ -11,7 +11,7 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-01-01-preview
   properties: {}
 }
 
-resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2022-01-01-preview' = {
+resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2022-01-01-preview' = [for serviceBusQueueName in serviceBusQueueNames: {
   parent: serviceBusNamespace
   name: serviceBusQueueName
   properties: {
@@ -27,7 +27,6 @@ resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2022-01-01-prev
     enablePartitioning: false
     enableExpress: false
   }
-}
+}]
 
 output serviceBusNamespaceName string = serviceBusNamespace.name
-output serviceBusQueueName string = serviceBusQueue.name

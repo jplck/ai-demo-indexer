@@ -12,7 +12,7 @@
 			"type": "process",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/src\\indexer"
+				"cwd": "${workspaceFolder}"
 			}
 		},
 		{
@@ -31,7 +31,7 @@
 			},
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/src\\indexer"
+				"cwd": "${workspaceFolder}"
 			}
 		},
 		{
@@ -47,7 +47,7 @@
 			"type": "process",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/src\\indexer"
+				"cwd": "${workspaceFolder}"
 			}
 		},
 		{
@@ -64,18 +64,18 @@
 			"dependsOn": "clean release (functions)",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/src\\indexer"
+				"cwd": "${workspaceFolder}"
 			}
 		},
 		{
 			"type": "func",
 			"dependsOn": "build (functions)",
 			"options": {
-				"cwd": "${workspaceFolder}/src\\indexer/bin/Debug/net7.0"
+				"cwd": "${workspaceFolder}/bin/Debug/net7.0"
 			},
-			"command": "host start",
+			"command": "host start --port 7073",
 			"isBackground": true,
-			"problemMatcher": "$func-dotnet-watch"
+			"problemMatcher": "$func-dotnet-watch",
 		}
 	]
 }
