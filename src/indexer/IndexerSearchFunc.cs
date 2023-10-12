@@ -18,7 +18,11 @@ namespace Company.Function
 
         private readonly IConfiguration _configuration;
 
-        public IndexerSearchFunc(IConfiguration configuration, ILoggerFactory loggerFactory, ISearch search)
+        public IndexerSearchFunc(
+            IConfiguration configuration, 
+            ILoggerFactory loggerFactory, 
+            ISearch search
+        )
         {
             _logger = loggerFactory.CreateLogger<IndexerSearchFunc>();
             _search = search;
@@ -26,7 +30,9 @@ namespace Company.Function
         }
 
         [Function("search")]
-        public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequestData req)
+        public async Task<HttpResponseData> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequestData req
+        )
         {
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "text/plain; charset=utf-8");

@@ -17,6 +17,7 @@ namespace Company.Function
 {
     public class IndexerQueueProcessorFunc
     {
+        private const string INBOUND_SB_QUEUE = "docscontent";
         private readonly ILogger<IndexerQueueProcessorFunc> _logger;
         private readonly IConfiguration _configuration;
 
@@ -26,11 +27,13 @@ namespace Company.Function
 
         private ISearch _search;
 
-        public IndexerQueueProcessorFunc(ILogger<IndexerQueueProcessorFunc> logger,
-        IConfiguration configuration,
-        IEmbeddingsGenerator embeddingsGenerator,
-        IChunker chunker,
-        ISearch search)
+        public IndexerQueueProcessorFunc(
+            ILogger<IndexerQueueProcessorFunc> logger,
+            IConfiguration configuration,
+            IEmbeddingsGenerator embeddingsGenerator,
+            IChunker chunker,
+            ISearch search
+        )
         {
             _logger = logger;
             _configuration = configuration;
@@ -40,7 +43,9 @@ namespace Company.Function
         }
 
         [Function(nameof(IndexerQueueProcessorFunc))]
-        public async Task Run([ServiceBusTrigger("docscontent", Connection = "DOCUMENT_SERVICEBUS")] ServiceBusReceivedMessage message)
+        public async Task Run(
+            [ServiceBusTrigger(INBOUND_SB_QUEUE, Connection = "DOCUMENT_SERVICEBUS")] ServiceBusReceivedMessage message
+        )
         {
             var documentContentResult = JsonConvert.DeserializeObject<DocumentContentResult>(message.Body.ToString());
             if (documentContentResult is null)
