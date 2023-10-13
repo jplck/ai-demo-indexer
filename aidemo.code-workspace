@@ -3,7 +3,10 @@
 {
     "folders": [
         {
-            "path": "./src/indexer"
+            "path": "./src/indexer_cs"
+        },
+        {
+            "path": "./src/indexer_py"
         },
         {
             "path": "./src/recognizer"
@@ -22,9 +25,16 @@
         "configurations": [],
         "compounds": [
             {
-                "name": "Run all functions",
+                "name": "Run dotnet",
                 "configurations": [
                     "Attach_Indexer_Func",
+                    "Attach_Recognizer_Func"
+                ]
+            },
+            {
+                "name": "Run python",
+                "configurations": [
+                    "Attach_IndexerPy_Func",
                     "Attach_Recognizer_Func"
                 ]
             }

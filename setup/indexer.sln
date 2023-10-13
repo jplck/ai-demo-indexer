@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "indexer", "..\src\indexer\indexer.csproj", "{38B23EDC-6407-4D17-ABC2-9B41F1A4589C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "indexer", "..\src\indexer_cs\indexer.csproj", "{38B23EDC-6407-4D17-ABC2-9B41F1A4589C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "recognizer", "..\src\recognizer\recognizer.csproj", "{51CFCA37-E8FA-4181-809A-3714220AA6E1}"
 EndProject
