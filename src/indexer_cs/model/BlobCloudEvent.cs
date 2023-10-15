@@ -27,4 +27,3 @@ public class BlobCloudEventStorageDiagnostics
 {
     public required string BatchId { get; set; }
 }
-

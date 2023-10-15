@@ -17,7 +17,7 @@ namespace Company.Function
 {
     public class IndexerQueueProcessorFunc
     {
-        private const string INBOUND_SB_QUEUE = "docscontent";
+        private const string INBOUND_SB_QUEUE = "docsevents";
         private readonly ILogger<IndexerQueueProcessorFunc> _logger;
         private readonly IConfiguration _configuration;
 
@@ -27,12 +27,15 @@ namespace Company.Function
 
         private ISearch _search;
 
+        private IDocumentRecognizer _documentRecognizer;
+
         public IndexerQueueProcessorFunc(
             ILogger<IndexerQueueProcessorFunc> logger,
             IConfiguration configuration,
             IEmbeddingsGenerator embeddingsGenerator,
             IChunker chunker,
-            ISearch search
+            ISearch search,
+            IDocumentRecognizer documentRecognizer
         )
         {
             _logger = logger;
@@ -40,6 +43,7 @@ namespace Company.Function
             _chunker = chunker;
             _search = search;
             _embeddingsGenerator = embeddingsGenerator;
+            _documentRecognizer = documentRecognizer;
         }
 
         [Function(nameof(IndexerQueueProcessorFunc))]
@@ -47,25 +51,38 @@ namespace Company.Function
             [ServiceBusTrigger(INBOUND_SB_QUEUE, Connection = "DOCUMENT_SERVICEBUS")] ServiceBusReceivedMessage message
         )
         {
-            var documentContentResult = JsonConvert.DeserializeObject<DocumentContentResult>(message.Body.ToString());
-            if (documentContentResult is null)
+            var blobEvent = JsonConvert.DeserializeObject<BlobCloudEvent>(message.Body.ToString());
+
+            if (blobEvent is not null && blobEvent.Type == "Microsoft.Storage.BlobCreated")
             {
-                _logger.LogDebug("documentContentResult is null.");
-                return;
+                var blobUri = new Uri(blobEvent.Data.Url);
+
+                var recognizedContent = string.Empty;
+                
+                if (blobUri.GetFileEnding() == "pdf")
+                {
+                    recognizedContent = await _documentRecognizer.RecognizeAsync(blobUri.AbsoluteUri);
+                }
+
+                if (recognizedContent is null)
+                {
+                    _logger.LogDebug("recognizedContent is null.");
+                    return;
+                }
+
+                var chunks = _chunker.Chunk(blobUri.AbsoluteUri, recognizedContent, 2048);
+
+                if (chunks is null)
+                {
+                    _logger.LogDebug("chunks is null.");
+                    return;
+                }
+
+                var chunksWithEmbeddings = await _embeddingsGenerator.GenerateEmbeddingsAsync(chunks);
+                await _search.AddDocumentAsync(chunksWithEmbeddings);
+
+                _logger.LogDebug("embeddings generated.");
             }
-
-            var chunks = _chunker.Chunk(documentContentResult.DocumentUri, documentContentResult.Content, 2048);
-
-            if (chunks is null)
-            {
-                _logger.LogDebug("chunks is null.");
-                return;
-            }
-
-            var chunksWithEmbeddings = await _embeddingsGenerator.GenerateEmbeddingsAsync(chunks);
-            await _search.AddDocumentAsync(chunksWithEmbeddings);
-
-            _logger.LogDebug("embeddings generated.");
 
         }
     }
