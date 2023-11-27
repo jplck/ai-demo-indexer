@@ -19,17 +19,38 @@ namespace Company.Function {
 
         public async Task<IReadOnlyCollection<Chunk>> GenerateEmbeddingsAsync(IReadOnlyCollection<Chunk> chunks)
         {
-            var chunkBlocks = (int)Math.Ceiling(chunks.Count / 16.0); //Current service limitation is 16 chunks per request
-            
+            if (chunks == null || chunks.Count == 0)
+            {
+                throw new ArgumentException("Invalid input. The collection of chunks cannot be null or empty.");
+            }
+
+            var chunkBlocks = (int)Math.Ceiling(chunks.Count / 16.0); // Current service limitation is 16 chunks per request
+
             var listOfChunks = new List<Chunk>();
 
             for (int i = 0; i < chunkBlocks; i++)
             {
-                var chunkBlock = chunks.Skip(i * 16).Take(16).ToList();           
-                var results = await _embeddingGenerator.GenerateEmbeddingsAsync(chunks.Select(c => c.Content).ToList());
-                chunkBlock.ForEach(c => c.Embedding = new Collection<float>(results[chunkBlock.IndexOf(c)].ToArray()));
-                listOfChunks.AddRange(chunkBlock);
+                var chunkBlock = chunks.Skip(i * 16).Take(16).ToList();
+
+                try
+                {
+                    var results = await _embeddingGenerator.GenerateEmbeddingsAsync(chunkBlock.Select(c => c.Content).ToList());
+
+                    for (int j = 0; j < chunkBlock.Count; j++)
+                    {
+                        var embedding = results[j]?.ToArray() ?? Array.Empty<float>();
+                        chunkBlock[j].Embedding = new Collection<float>(embedding);
+                    }
+
+                    listOfChunks.AddRange(chunkBlock);
+                }
+                catch (Exception ex)
+                {
+                    // Handle the exception or log the error
+                    Console.WriteLine($"Error generating embeddings for chunk block {i + 1}: {ex.Message}");
+                }
             }
+
             return listOfChunks;
         }
     }
